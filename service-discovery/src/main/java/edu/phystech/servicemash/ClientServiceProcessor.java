@@ -36,9 +36,10 @@ public class ClientServiceProcessor {
     }
 
     @Transactional
-    public ClientService editName(long serviceId, String newName) {
+    public ClientService editMeta(long serviceId, String newName, String fqdn) {
         ClientService currentVersion = simpleRepository.findById(serviceId).orElseThrow(() -> new ObjectNotFoundException(serviceId, "service"));
         currentVersion.setName(newName);
+        currentVersion.setFqdn(fqdn);
         long version = currentVersion.getVersion() + 1;
         currentVersion.setVersion(version);
         ClientService result = simpleRepository.save(currentVersion);

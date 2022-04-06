@@ -28,9 +28,10 @@ public class ClientServiceController {
     @RequestMapping(value = "/service", method = RequestMethod.PUT)
     public ResponseWrapper<ClientService> editServiceName(
             @RequestParam(name = "id") long serviceId,
-            @RequestParam(name = "name") String name
+            @RequestParam(name = "name") String name,
+            @RequestParam(name = "fqdn") String fqdn
     ) {
-        return buildResponse(serviceProcessor.editName(serviceId, name));
+        return buildResponse(serviceProcessor.editMeta(serviceId, name, fqdn));
     }
 
     @RequestMapping(value = "/service", method = RequestMethod.GET)

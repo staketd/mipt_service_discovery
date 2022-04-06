@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.Entity;
+import java.util.List;
+import java.util.Set;
 
 @Document(collection = "services")
 public class ClientService {
@@ -13,9 +15,12 @@ public class ClientService {
     private String name;
     private String fqdn;
 
-    protected long version;
+    private long version;
 
-//    private List<ServiceLocation> serviceLocations;
+    private ProxyNode proxyNode;
+    private Set<Node> instances;
+
+    private Set<Long> usedServices;
 
     public ClientService() {
     }
@@ -30,22 +35,6 @@ public class ClientService {
         this.fqdn = fqdn;
         this.version = 0;
     }
-
-    public ClientService(ClientService service) {
-        this.serviceId = service.serviceId;
-        name = service.name;
-        fqdn = service.fqdn;
-        version = service.version;
-    }
-
-//    protected ClientService(
-//            long serviceId,
-//            String name,
-//            String fqdn/*,
-//            List<ServiceLocation> serviceLocations*/
-//    ) {
-////        this.serviceLocations = serviceLocations;
-//    }
 
     public String getName() {
         return name;
@@ -85,5 +74,29 @@ public class ClientService {
 
     public void setServiceId(long serviceId) {
         this.serviceId = serviceId;
+    }
+
+    public Set<Long> getUsedServices() {
+        return usedServices;
+    }
+
+    public void setUsedServices(Set<Long> usedServices) {
+        this.usedServices = usedServices;
+    }
+
+    public Set<Node> getInstances() {
+        return instances;
+    }
+
+    public void setInstances(Set<Node> instances) {
+        this.instances = instances;
+    }
+
+    public ProxyNode getProxyNode() {
+        return proxyNode;
+    }
+
+    public void setProxyNode(ProxyNode proxyNode) {
+        this.proxyNode = proxyNode;
     }
 }
