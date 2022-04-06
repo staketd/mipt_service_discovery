@@ -5,19 +5,19 @@ import java.util.Objects;
 
 
 public class ClientServiceVersionedId implements Serializable {
-    private long serviceId;
+    private String serviceId;
     private long version;
 
-    public ClientServiceVersionedId(long serviceId, long version) {
+    public ClientServiceVersionedId(String serviceId, long version) {
         this.serviceId = serviceId;
         this.version = version;
     }
 
-    public long getServiceId() {
+    public String getServiceId() {
         return serviceId;
     }
 
-    public void setServiceId(long serviceId) {
+    public void setServiceId(String serviceId) {
         this.serviceId = serviceId;
     }
 

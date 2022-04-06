@@ -1,7 +1,7 @@
 package edu.phystech.servicemash.exception;
 
 public class ServiceAlreadyExistsException extends RuntimeException {
-    public ServiceAlreadyExistsException(long serviceId) {
+    public ServiceAlreadyExistsException(String serviceId) {
         super("Service with id = " + serviceId + " already exists");
     }
 }

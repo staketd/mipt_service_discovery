@@ -1,50 +1,59 @@
 package edu.phystech.servicemash;
 
-import edu.phystech.servicemash.exception.ServiceAlreadyExistsException;
-import edu.phystech.servicemash.repositories.simple.ClientServiceRepository;
-import edu.phystech.servicemash.repositories.versioned.ClientServiceWithVersionRepository;
-import org.hibernate.ObjectNotFoundException;
+import edu.phystech.servicemash.exception.WrongParameterException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 public class ClientServiceProcessor {
-    private final ClientServiceRepository simpleRepository;
-    private final ClientServiceWithVersionRepository versionRepository;
+    private final ServiceDao serviceDao;
 
     public ClientServiceProcessor(
-            ClientServiceRepository simpleRepository,
-            ClientServiceWithVersionRepository versionRepository
+            ServiceDao serviceDao
     ) {
-        this.simpleRepository = simpleRepository;
-        this.versionRepository = versionRepository;
+        this.serviceDao = serviceDao;
     }
 
     @Transactional
-    public ClientService createService(long serviceId, String name, String fqdn) {
-        if (simpleRepository.existsById(serviceId)) {
-            throw new ServiceAlreadyExistsException(serviceId);
-        }
-        ClientService service = new ClientService(serviceId, name, fqdn);
-        versionRepository.save(new ClientServiceVersioned(service));
-        return simpleRepository.save(service);
+    public ClientService createService(String serviceId, String name, String fqdn) {
+        return serviceDao.createNewService(serviceId, name, fqdn);
     }
 
-    public ClientService findByServiceIdAndVersion(long serviceId, long version) {
-        ClientServiceVersionedId id = new ClientServiceVersionedId(serviceId, version);
-        return versionRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException(id, "service")).getClientService();
+    public ClientService getServiceByServiceIdAndVersion(String serviceId, long version) {
+        return serviceDao.getByServiceIdAndVersion(serviceId, version);
+    }
+
+    public ClientService getCurrentServiceVersion(String serviceId) {
+        return serviceDao.getCurrentVersion(serviceId);
     }
 
     @Transactional
-    public ClientService editName(long serviceId, String newName) {
-        ClientService currentVersion = simpleRepository.findById(serviceId).orElseThrow(() -> new ObjectNotFoundException(serviceId, "service"));
+    public ClientService editMeta(String serviceId, String newName, String fqdn) {
+        ClientService currentVersion = serviceDao.getCurrentVersion(serviceId);
         currentVersion.setName(newName);
-        long version = currentVersion.getVersion() + 1;
-        currentVersion.setVersion(version);
-        ClientService result = simpleRepository.save(currentVersion);
-        versionRepository.save(new ClientServiceVersioned(currentVersion));
-        return result;
+        currentVersion.setFqdn(fqdn);
+        return serviceDao.saveNewVersion(currentVersion);
     }
 
+    @Transactional
+    public ClientService addUsedService(String serviceId, Set<String> usedServiceIds) {
+        ClientService currentVersion = serviceDao.getCurrentVersion(serviceId);
 
+        Set<String> existingServiceIds = serviceDao.getByIds(usedServiceIds).stream().map(ClientService::getServiceId).collect(Collectors.toSet());
+
+        usedServiceIds.forEach(service -> {
+            if (!existingServiceIds.contains(service)) {
+                throw new WrongParameterException(service  + "does not exist");
+            }
+        });
+
+        currentVersion.setUsedServices(usedServiceIds);
+
+        return serviceDao.saveNewVersion(currentVersion);
+    }
 }

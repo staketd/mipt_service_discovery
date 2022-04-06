@@ -5,8 +5,8 @@ import java.net.InetSocketAddress;
 public class ProxyNode extends Node {
     private BalancingType balancingType;
 
-    public ProxyNode(InetSocketAddress address, BalancingType balancingType) {
-        super(address);
+    public ProxyNode(String address, int port, BalancingType balancingType) {
+        super(address, port);
         this.balancingType = balancingType;
     }
 
