@@ -69,7 +69,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <fork>true</fork>
-                    <mainClass>edu.phystech.servicemash.ServiceDiscoveryApp</mainClass>
+                    <mainClass>edu.phystech.servicemesh.ServiceDiscoveryApp</mainClass>
                 </configuration>
                 <executions>
                     <execution>
