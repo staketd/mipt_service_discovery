@@ -9,5 +9,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class ServiceIngressProxy {
+    private String nodeId;
     private Endpoint ingressEndpoint;
+    private Endpoint monitoringEndpoint;
 }

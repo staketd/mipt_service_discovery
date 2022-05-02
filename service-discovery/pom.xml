@@ -10,6 +10,7 @@
         <artifactId>diploma</artifactId>
         <groupId>edu.phystech</groupId>
         <version>1.0</version>
+        <relativePath/>
     </parent>
 
     <properties>
@@ -59,6 +60,16 @@
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>${commons-beanutils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.atomikos</groupId>
+            <artifactId>transactions-jdbc</artifactId>
+            <version>5.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.6.7</version>
         </dependency>
     </dependencies>
 

@@ -1,21 +1,20 @@
 package edu.phystech.servicemesh.config;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
-import java.util.Collection;
-import java.util.Collections;
 
 import static java.lang.String.format;
 
@@ -31,6 +30,11 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
         this.environment = environment;
     }
 
+    @Bean
+    public MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
+        return new MongoTransactionManager(dbFactory);
+    }
+
     @Override
     protected String getDatabaseName() {
         return environment.getProperty("mongodb.services.db");
@@ -40,7 +44,8 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     public MongoClient mongoClient() {
         String host = environment.getProperty("mongodb.services.host");
         String port = environment.getProperty("mongodb.services.port");
-        ConnectionString connectionString = new ConnectionString(format("mongodb://%s:%s/%s", host, port, getDatabaseName()));
+        String replicaSet = environment.getProperty("mongodb.services.replica_set");
+        ConnectionString connectionString = new ConnectionString(format("mongodb://%s:%s/%s?replicaSet=%s", host, port, getDatabaseName(), replicaSet));
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
                 .build();

@@ -1,16 +1,15 @@
 package edu.phystech.servicemesh.model;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Document(collection = "node_layouts")
 @AllArgsConstructor
@@ -20,12 +19,14 @@ import java.util.Map;
 public class NodeLayout {
     @Id
     private String nodeIdentifier;
-    private Map<String, AddressLayout> ingressAddressesLayout;
+    private Map<String, AddressPortLayout> ingressAddressesLayout;
+    private LocalAddressLayout localAddressLayout;
 
     public NodeLayout(String nodeIdentifier, Collection<String> addresses) {
         this.nodeIdentifier = nodeIdentifier;
         ingressAddressesLayout = new HashMap<>();
-        addresses.forEach(address -> ingressAddressesLayout.put(address, new AddressLayout()));
+        addresses.forEach(address -> ingressAddressesLayout.put(address, new AddressPortLayout()));
+        localAddressLayout = new LocalAddressLayout();
     }
 
     public Endpoint allocateIngressEndpoint() {
@@ -37,11 +38,20 @@ public class NodeLayout {
         return null;
     }
 
-    public Endpoint allocateEgressEndpoint() {
-        return new Endpoint("127.0.0.1", 25565);
+    public void deallocateIngressEndpoint(Endpoint endpoint) {
+        ingressAddressesLayout.get(endpoint.getAddress()).deallocatePort(endpoint.getPort());
     }
 
-    public void deallocateEndpoint(Endpoint endpoint) {
-        ingressAddressesLayout.get(endpoint.getAddress()).deallocatePort(endpoint.getPort());
+    public String allocateLocalAddress() {
+        return localAddressLayout.allocateAddress();
+    }
+
+    public void deallocateLocalAddress(String address) {
+        localAddressLayout.deallocateAddress(address);
+    }
+
+    public boolean isEmpty() {
+        return localAddressLayout.isEmpty() && ingressAddressesLayout.values()
+                .stream().allMatch(IntResourceAllocator::isEmpty);
     }
 }

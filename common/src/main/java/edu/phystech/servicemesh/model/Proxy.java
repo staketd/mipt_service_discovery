@@ -11,7 +11,10 @@ import java.util.Map;
 @Setter
 @Getter
 public class Proxy {
+    /**
+     * Внешний эндпоинт, на котором работает сервис на ноде
+     */
     private Endpoint ingressEndpoint;
     private Endpoint monitoringEndpoint;
-    private Map<String, Endpoint> egressEndpoints;
+    private String localAddress;
 }
