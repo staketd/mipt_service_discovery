@@ -1,11 +1,11 @@
 package edu.phystech.servicemesh.model;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Document(collection = "service_versions")
 public class ClientServiceVersioned {
-    @Id
+    @MongoId
     private ClientServiceVersionedId id;
     private ClientService clientService;
     public ClientServiceVersioned(ClientService service) {
@@ -24,4 +24,11 @@ public class ClientServiceVersioned {
         this.clientService = clientService;
     }
 
+    public ClientServiceVersionedId getId() {
+        return id;
+    }
+
+    public void setId(ClientServiceVersionedId id) {
+        this.id = id;
+    }
 }

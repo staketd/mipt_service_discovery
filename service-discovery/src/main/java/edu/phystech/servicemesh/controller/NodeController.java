@@ -2,42 +2,47 @@ package edu.phystech.servicemesh.controller;
 
 import java.util.List;
 
-import edu.phystech.servicemesh.NodeService;
+import javax.validation.Valid;
+
+import edu.phystech.servicemesh.NodeLayoutService;
 import edu.phystech.servicemesh.model.NodeLayout;
+import edu.phystech.servicemesh.model.request.AddNodeRequest;
 import edu.phystech.servicemesh.response.ResponseStatus;
 import edu.phystech.servicemesh.response.ResponseWrapper;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class NodeController {
-    private final NodeService nodeService;
+    private final NodeLayoutService nodeLayoutService;
 
-    public NodeController(NodeService nodeService) {
-        this.nodeService = nodeService;
+    public NodeController(NodeLayoutService nodeLayoutService) {
+        this.nodeLayoutService = nodeLayoutService;
     }
 
-    @RequestMapping(value = "/node/discover", method = RequestMethod.POST)
+    @PostMapping(value = "/node")
     public ResponseWrapper<ResponseStatus> discoverNode(
-            @RequestParam(name = "service_id") String serviceId,
-            @RequestParam(name = "address") String address,
-            @RequestParam(name = "port") int port
+            @Valid @RequestBody AddNodeRequest request
     ) {
-        nodeService.discoverNode(serviceId, address, port);
+        nodeLayoutService.addNode(request.getNode());
         return ResponseWrapper.buildResponse(ResponseStatus.Success);
     }
 
-    @RequestMapping(value = "/node/delete", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/node")
     public ResponseWrapper<ResponseStatus> deleteNode(
-            @RequestParam(name = "service_id") String serviceId,
-            @RequestParam(name = "address") String address,
-            @RequestParam(name = "port") int port
+            @RequestParam(value = "node_id") String nodeId
     ) {
-        nodeService.deregisterNode(serviceId, address, port);
+        nodeLayoutService.deleteNode(nodeId);
         return ResponseWrapper.buildResponse(ResponseStatus.Success);
     }
 
-    @RequestMapping(value = "/node/layouts", method = RequestMethod.GET)
+    @RequestMapping(value = "/node/all", method = RequestMethod.GET)
     public ResponseWrapper<List<NodeLayout>> nodeLayouts() {
-        return ResponseWrapper.buildResponse(nodeService.getAllLayouts());
+        return ResponseWrapper.buildResponse(nodeLayoutService.getAllLayouts());
     }
 }

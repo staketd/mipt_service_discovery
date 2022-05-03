@@ -8,8 +8,10 @@ import javax.validation.Valid;
 
 import edu.phystech.servicemesh.ClientServiceProcessor;
 import edu.phystech.servicemesh.model.ClientService;
-import edu.phystech.servicemesh.request.CreateServiceRequest;
+import edu.phystech.servicemesh.model.request.CreateServiceRequest;
+import edu.phystech.servicemesh.response.ResponseStatus;
 import edu.phystech.servicemesh.response.ResponseWrapper;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,6 +34,14 @@ public class ClientServiceController {
             @Valid @RequestBody CreateServiceRequest createServiceRequest
     ) {
         return buildResponse(serviceProcessor.createService(createServiceRequest));
+    }
+
+    @DeleteMapping(value = "/service")
+    public ResponseWrapper<ResponseStatus> deleteService(
+            @RequestParam(value = "service_id") String serviceId
+    ) {
+        serviceProcessor.deleteService(serviceId);
+        return buildResponse(ResponseStatus.Success);
     }
 
     @RequestMapping(value = "/service/version", method = RequestMethod.GET)
