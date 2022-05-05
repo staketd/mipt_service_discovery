@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EventNotifier {
-    private final static String CONTROLLER_HOST = "http://localhost:8123";
+    private final static String CONTROLLER_HOST = "http://localhost:8079/controller/add-config";
     private HttpClient httpClient;
     private ObjectMapper objectMapper = new ObjectMapper();
 

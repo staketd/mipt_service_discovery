@@ -21,6 +21,7 @@ import edu.phystech.servicemesh.model.ServiceInstance;
 import edu.phystech.servicemesh.model.ServiceInstanceId;
 import edu.phystech.servicemesh.model.envoy.ChangeEnvoyConfigRequest;
 import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
+import edu.phystech.servicemesh.model.envoy.EnvoyId;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
@@ -83,7 +84,8 @@ public class InstanceProcessor {
                 currentVersion.getVersion() + 1,
                 List.of(
                         currentVersion.getBalancerEnvoyConfig(),
-                        envoyService.getProxyEnvoyConfig(currentVersion, toId.getEnvoyId())
+                        envoyService.getProxyEnvoyConfig(currentVersion, EnvoyId.getInstanceId(serviceId,
+                                instance.getServiceInstanceId().getNodeId(), instance.getServiceInstanceId().getId()))
                 )
         );
 
@@ -121,7 +123,7 @@ public class InstanceProcessor {
                 .toList();
 
         List<ClientService> usedService = serviceDao.getByIds(newVersion.getUsedServices());
-        List<EnvoyConfig> envoyConfigs = new ArrayList<>(envoyService.getInstancesEnvoyConfigs(usedService, addedInstances));
+        List<EnvoyConfig> envoyConfigs = new ArrayList<>(envoyService.getInstancesEnvoyConfigs(serviceId, usedService, addedInstances));
         envoyConfigs.add(newVersion.getBalancerEnvoyConfig());
         return Pair.of(newVersion,
                 new ChangeEnvoyConfigRequest(

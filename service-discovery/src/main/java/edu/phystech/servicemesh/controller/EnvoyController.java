@@ -1,7 +1,6 @@
 package edu.phystech.servicemesh.controller;
 
 import edu.phystech.servicemesh.EnvoyService;
-import edu.phystech.servicemesh.model.EnvoyType;
 import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.envoy.EnvoyId;
 import edu.phystech.servicemesh.response.ResponseWrapper;
@@ -17,13 +16,12 @@ public class EnvoyController {
         this.envoyService = envoyService;
     }
 
-    @GetMapping(value = "/service/envoy")
+    @GetMapping(value = "update-result")
     public ResponseWrapper<EnvoyConfig> getEnvoyConfig(
-            @RequestParam(value = "service_id") String serviceId,
-            @RequestParam(value = "envoy_type") EnvoyType envoyType,
-            @RequestParam(value = "envoy_node_id") String envoyNodeId,
-            @RequestParam(value = "envoy_cluster_id") String envoyClusterId
+            @RequestParam(value = "node_id") String envoyNodeId,
+            @RequestParam(value = "cluster_id") String envoyClusterId
     ) {
-        return ResponseWrapper.buildResponse(envoyService.getEnvoyConfig(serviceId, envoyType, new EnvoyId(envoyClusterId, envoyNodeId)));
+        EnvoyId envoyId = new EnvoyId(envoyClusterId, envoyNodeId);
+        return ResponseWrapper.buildResponse(envoyService.getEnvoyConfig(envoyId.getClusterId(), envoyId));
     }
 }

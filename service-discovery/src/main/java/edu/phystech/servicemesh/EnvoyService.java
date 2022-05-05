@@ -6,8 +6,6 @@ import java.util.Map;
 
 import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.Endpoint;
-import edu.phystech.servicemesh.model.EnvoyType;
-import edu.phystech.servicemesh.model.ServiceIngressProxy;
 import edu.phystech.servicemesh.model.ServiceInstance;
 import edu.phystech.servicemesh.model.ServiceInstanceId;
 import edu.phystech.servicemesh.model.envoy.BalancerEnvoyConfig;
@@ -27,29 +25,20 @@ public class EnvoyService {
     }
 
     @Transactional(readOnly = true)
-    public EnvoyConfig getEnvoyConfig(String serviceId, EnvoyType envoyType, EnvoyId envoyId) {
+    public EnvoyConfig getEnvoyConfig(String serviceId, EnvoyId envoyId) {
         ClientService service = serviceDao.getCurrentVersion(serviceId);
-        return switch (envoyType) {
+        return switch (envoyId.getEnvoyType()) {
             case BALANCER -> getBalancerEnvoyConfig(service);
             case INSTANCE -> getProxyEnvoyConfig(service, envoyId);
         };
     }
 
     private BalancerEnvoyConfig getBalancerEnvoyConfig(ClientService service) {
-        ServiceIngressProxy proxy = service.getServiceIngressProxy();
-        EnvoyId envoyId = new EnvoyId(proxy.getNodeId(), service.getServiceId());
-        return new BalancerEnvoyConfig(
-                envoyId,
-                proxy.getMonitoringEndpoint(),
-                service.getInstances()
-                        .stream()
-                        .map(instance -> instance.getProxy().getIngressEndpoint())
-                        .toList()
-        );
+        return service.getBalancerEnvoyConfig();
     }
 
     public ProxyEnvoyConfig getProxyEnvoyConfig(ClientService service, EnvoyId envoyId) {
-        ServiceInstanceId instanceId = new ServiceInstanceId(envoyId.getNodeId(), envoyId.getClusterId());
+        ServiceInstanceId instanceId = envoyId.getServiceInstanceId();
 
         List<ClientService> usedServices = serviceDao.getByIds(service.getUsedServices());
 
@@ -57,17 +46,19 @@ public class EnvoyService {
                 .filter(serviceInstance -> serviceInstance.getServiceInstanceId().equals(instanceId))
                 .findFirst().orElseThrow(() -> new ObjectNotFoundException(envoyId, "envoy"));
 
-        return getProxyEnvoyConfig(usedServices, instance);
+        return getProxyEnvoyConfig(service.getServiceId(), usedServices, instance);
     }
 
     public List<EnvoyConfig> getInstancesEnvoyConfigs(
+            String serviceId,
             List<ClientService> usedServices,
             List<ServiceInstance> instances
     ) {
-        return instances.stream().map(instance -> (EnvoyConfig) getProxyEnvoyConfig(usedServices, instance)).toList();
+        return instances.stream().map(instance -> (EnvoyConfig) getProxyEnvoyConfig(serviceId, usedServices, instance)).toList();
     }
 
     public ProxyEnvoyConfig getProxyEnvoyConfig(
+            String serviceId,
             List<ClientService> usedServices,
             ServiceInstance instance) {
         Map<Endpoint, Endpoint> endpointMapping = new HashMap<>();
@@ -85,7 +76,7 @@ public class EnvoyService {
         );
 
         return new ProxyEnvoyConfig(
-                instance.getServiceInstanceId().getEnvoyId(),
+                EnvoyId.getInstanceId(serviceId, instance.getServiceInstanceId().getNodeId(), instance.getServiceInstanceId().getId()),
                 instance.getProxy().getMonitoringEndpoint(),
                 endpointMapping
         );
