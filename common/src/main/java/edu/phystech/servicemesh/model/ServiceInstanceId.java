@@ -1,4 +1,4 @@
-package edu.phystech.servicemesh;
+package edu.phystech.servicemesh.model;
 
 import javax.validation.constraints.NotEmpty;
 

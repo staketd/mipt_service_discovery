@@ -1,7 +1,9 @@
 package edu.phystech.servicemesh;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,21 +18,47 @@ import edu.phystech.servicemesh.model.Endpoint;
 import edu.phystech.servicemesh.model.NodeLayout;
 import edu.phystech.servicemesh.model.Proxy;
 import edu.phystech.servicemesh.model.ServiceInstance;
+import edu.phystech.servicemesh.model.ServiceInstanceId;
+import edu.phystech.servicemesh.model.envoy.ChangeEnvoyConfigRequest;
+import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
+import edu.phystech.servicemesh.model.envoy.EnvoyId;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 public class InstanceProcessor {
     private final ServiceDao serviceDao;
     private final NodeLayoutDao nodeLayoutDao;
+    private final EnvoyService envoyService;
+    private final EventNotifier eventNotifier;
 
-    public InstanceProcessor(ServiceDao serviceDao, NodeLayoutDao nodeLayoutDao) {
+    public InstanceProcessor(
+            ServiceDao serviceDao,
+            NodeLayoutDao nodeLayoutDao,
+            EnvoyService envoyService,
+            EventNotifier eventNotifier
+    ) {
         this.serviceDao = serviceDao;
         this.nodeLayoutDao = nodeLayoutDao;
+        this.envoyService = envoyService;
+        this.eventNotifier = eventNotifier;
+    }
+
+    public ClientService moveInstance(String serviceId, ServiceInstanceId fromId, ServiceInstanceId toId) {
+        Pair<ClientService, ChangeEnvoyConfigRequest> result = doMoveInstance(serviceId, fromId, toId);
+        try {
+            eventNotifier.sendNewServiceVersion(result.getRight());
+        } catch (Exception e) {
+            log.error("Failed to schedule config change, will try to schedule with scheduler", e);
+        }
+        return result.getLeft();
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ClientService moveInstance(String serviceId, ServiceInstanceId fromId, ServiceInstanceId toId) {
+    public Pair<ClientService, ChangeEnvoyConfigRequest> doMoveInstance(String serviceId, ServiceInstanceId fromId, ServiceInstanceId toId) {
         ClientService currentVersion = serviceDao.getCurrentVersion(serviceId);
         NodeLayout fromNodeLayout = nodeLayoutDao.getNodeLayoutById(fromId.getNodeId());
         NodeLayout toNodeLayout = nodeLayoutDao.getNodeLayoutById(toId.getNodeId());
@@ -44,12 +72,25 @@ public class InstanceProcessor {
 
         deallocateInstance(fromNodeLayout, instance);
 
+        ServiceInstance allocatedInstance =
+                allocateServiceInstance(toNodeLayout, toId, currentVersion.getUsedServices(), currentVersion.getPort());
+
         currentVersion.getInstances().add(
-                allocateServiceInstance(toNodeLayout, toId, currentVersion.getUsedServices(), currentVersion.getPort())
+                allocatedInstance
+        );
+
+        ChangeEnvoyConfigRequest request = new ChangeEnvoyConfigRequest(
+                serviceId,
+                currentVersion.getVersion() + 1,
+                List.of(
+                        currentVersion.getBalancerEnvoyConfig(),
+                        envoyService.getProxyEnvoyConfig(currentVersion, EnvoyId.getInstanceId(serviceId,
+                                instance.getServiceInstanceId().getNodeId(), instance.getServiceInstanceId().getId()))
+                )
         );
 
         nodeLayoutDao.saveNodeLayouts(List.of(fromNodeLayout, toNodeLayout));
-        return serviceDao.saveNewVersion(currentVersion);
+        return Pair.of(serviceDao.saveNewVersion(currentVersion), request);
     }
 
     public HashMap<String, Integer> getPortMappingForService(Collection<String> services) {
@@ -61,11 +102,36 @@ public class InstanceProcessor {
         return portMapping;
     }
 
+    public ClientService addInstances(String serviceId, List<ServiceInstanceId> serviceInstanceIds) {
+        Pair<ClientService, ChangeEnvoyConfigRequest> result = doAddInstances(serviceId, serviceInstanceIds);
+        try {
+            eventNotifier.sendNewServiceVersion(result.getRight());
+        } catch (Exception e) {
+            log.error("Failed to notify", e);
+        }
+        return result.getLeft();
+    }
 
     @Transactional(rollbackFor = Exception.class)
-    public ClientService addInstances(String serviceId, List<ServiceInstanceId> serviceInstanceIds) {
+    protected Pair<ClientService, ChangeEnvoyConfigRequest> doAddInstances(String serviceId, List<ServiceInstanceId> serviceInstanceIds) {
         ClientService service = serviceDao.getCurrentVersion(serviceId);
-        return addInstances(service, serviceInstanceIds);
+        ClientService newVersion = addInstances(service, serviceInstanceIds);
+
+        HashSet<ServiceInstanceId> instanceIds = new HashSet<>(serviceInstanceIds);
+        List<ServiceInstance> addedInstances = newVersion.getInstances().stream()
+                .filter(instance -> instanceIds.contains(instance.getServiceInstanceId()))
+                .toList();
+
+        List<ClientService> usedService = serviceDao.getByIds(newVersion.getUsedServices());
+        List<EnvoyConfig> envoyConfigs = new ArrayList<>(envoyService.getInstancesEnvoyConfigs(serviceId, usedService, addedInstances));
+        envoyConfigs.add(newVersion.getBalancerEnvoyConfig());
+        return Pair.of(newVersion,
+                new ChangeEnvoyConfigRequest(
+                        serviceId,
+                        newVersion.getVersion(),
+                        envoyConfigs
+                )
+        );
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -115,8 +181,23 @@ public class InstanceProcessor {
         );
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public ClientService deallocateInstances(String serviceId, List<ServiceInstanceId> serviceInstanceIds) {
+        ClientService newVersion = doDeallocateInstances(serviceId, serviceInstanceIds);
+        ChangeEnvoyConfigRequest request = new ChangeEnvoyConfigRequest(
+                serviceId,
+                newVersion.getVersion(),
+                List.of(newVersion.getBalancerEnvoyConfig())
+        );
+        try {
+            eventNotifier.sendNewServiceVersion(request);
+        } catch (Exception e) {
+            log.error("Failed to notify", e);
+        }
+        return newVersion;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ClientService doDeallocateInstances(String serviceId, List<ServiceInstanceId> serviceInstanceIds) {
         ClientService service = serviceDao.getCurrentVersion(serviceId);
 
         Map<ServiceInstanceId, ServiceInstance> serviceInstanceMap = service.getInstances().stream()

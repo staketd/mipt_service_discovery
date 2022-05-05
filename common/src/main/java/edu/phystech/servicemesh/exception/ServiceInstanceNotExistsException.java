@@ -1,6 +1,6 @@
 package edu.phystech.servicemesh.exception;
 
-import edu.phystech.servicemesh.ServiceInstanceId;
+import edu.phystech.servicemesh.model.ServiceInstanceId;
 
 public class ServiceInstanceNotExistsException extends RuntimeException {
     public ServiceInstanceNotExistsException(String serviceId, ServiceInstanceId serviceInstanceId) {
