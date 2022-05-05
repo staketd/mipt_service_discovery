@@ -3,7 +3,6 @@ package edu.phystech.servicemesh.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import edu.phystech.servicemesh.ServiceInstanceId;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

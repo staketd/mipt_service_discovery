@@ -12,6 +12,7 @@ import edu.phystech.servicemesh.model.request.CreateServiceRequest;
 import edu.phystech.servicemesh.response.ResponseStatus;
 import edu.phystech.servicemesh.response.ResponseWrapper;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -42,6 +43,14 @@ public class ClientServiceController {
     ) {
         serviceProcessor.deleteService(serviceId);
         return buildResponse(ResponseStatus.Success);
+    }
+
+    @PutMapping(value = "/service/move/balancer")
+    public ResponseWrapper<ClientService> moveBalancer(
+            @RequestParam(value = "service_id") String serviceId,
+            @RequestParam(value = "to_node_id") String nodeId
+    ) {
+        return buildResponse(serviceProcessor.moveBalancer(serviceId, nodeId));
     }
 
     @RequestMapping(value = "/service/version", method = RequestMethod.GET)

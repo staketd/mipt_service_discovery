@@ -1,6 +1,6 @@
 package edu.phystech.servicemesh.exception;
 
-import edu.phystech.servicemesh.ServiceInstanceId;
+import edu.phystech.servicemesh.model.ServiceInstanceId;
 
 public class ServiceIsNotPresentOnNodeException extends RuntimeException {
     public ServiceIsNotPresentOnNodeException(ServiceInstanceId instanceId) {

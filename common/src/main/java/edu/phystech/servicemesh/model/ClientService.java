@@ -5,6 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.phystech.servicemesh.model.envoy.BalancerEnvoyConfig;
+import edu.phystech.servicemesh.model.envoy.EnvoyId;
 import edu.phystech.servicemesh.model.request.CreateServiceRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,5 +43,24 @@ public class ClientService {
         this.usedServices = request.getUsedServices();
         this.port = request.getPort();
         this.instances = new LinkedList<>();
+    }
+
+    @JsonIgnore
+    public EnvoyId getBalancerEnvoyId() {
+        return new EnvoyId(serviceIngressProxy.getNodeId(), serviceId);
+    }
+
+    @JsonIgnore
+    public List<Endpoint> getInstancesEndpoints() {
+        return instances.stream().map(instance -> instance.getProxy().getIngressEndpoint()).toList();
+    }
+
+    @JsonIgnore
+    public BalancerEnvoyConfig getBalancerEnvoyConfig() {
+        return new BalancerEnvoyConfig(
+                getBalancerEnvoyId(),
+                serviceIngressProxy.getMonitoringEndpoint(),
+                getInstancesEndpoints()
+        );
     }
 }
