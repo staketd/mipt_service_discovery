@@ -1,5 +1,8 @@
 package edu.phystech.servicemesh;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,28 +15,48 @@ import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.Endpoint;
 import edu.phystech.servicemesh.model.NodeLayout;
 import edu.phystech.servicemesh.model.ServiceIngressProxy;
+import edu.phystech.servicemesh.model.envoy.ChangeEnvoyConfigRequest;
+import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.request.CreateServiceRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 public class ClientServiceProcessor {
     private final ServiceDao serviceDao;
     private final NodeLayoutDao nodeLayoutDao;
     private final InstanceProcessor instanceProcessor;
+    private final EnvoyService envoyService;
+    private final EventNotifier eventNotifier;
 
     public ClientServiceProcessor(
             ServiceDao serviceDao,
             NodeLayoutDao nodeLayoutDao,
-            InstanceProcessor instanceProcessor
-    ) {
+            InstanceProcessor instanceProcessor,
+            EnvoyService envoyService,
+            EventNotifier eventNotifier) {
         this.serviceDao = serviceDao;
         this.nodeLayoutDao = nodeLayoutDao;
         this.instanceProcessor = instanceProcessor;
+        this.envoyService = envoyService;
+        this.eventNotifier = eventNotifier;
+    }
+
+    public ClientService createService(CreateServiceRequest request) {
+        Pair<ClientService, ChangeEnvoyConfigRequest> result = doCreateService(request);
+        try {
+            eventNotifier.sendNewServiceVersion(result.getRight());
+        } catch (Exception e) {
+            log.error("failed to send notify", e);
+        }
+        return result.getLeft();
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ClientService createService(CreateServiceRequest request) {
+    public Pair<ClientService, ChangeEnvoyConfigRequest> doCreateService(CreateServiceRequest request) {
         if (serviceDao.exists(request.getServiceId())) {
             throw new ServiceAlreadyExistsException(request.getServiceId());
         }
@@ -42,7 +65,10 @@ public class ClientServiceProcessor {
 
         ClientService clientService = new ClientService(request);
 
-        request.getUsedServices().forEach(service -> addUsedByService(service, request.getServiceId()));
+        List<ClientService> usedServices = request.getUsedServices()
+                .stream()
+                .map(service -> addUsedByService(service, request.getServiceId()))
+                .toList();
 
         Endpoint ingressProxyEndpoint = balancerNodeLayout.allocateIngressEndpoint();
         Endpoint monitoringProxyEndpoint = balancerNodeLayout.allocateIngressEndpoint();
@@ -57,15 +83,27 @@ public class ClientServiceProcessor {
 
         instanceProcessor.addInstances(clientService, request.getServiceInstanceIds());
 
-        serviceDao.saveNewVersion(clientService);
+        List<EnvoyConfig> envoyConfigs = new LinkedList<>(clientService.getInstances().stream()
+                .map(instance -> (EnvoyConfig) envoyService.getProxyEnvoyConfig(usedServices, instance))
+                .toList()
+        );
+        ClientService newVersion = serviceDao.saveNewVersion(clientService);
 
-        return clientService;
+        envoyConfigs.add(newVersion.getBalancerEnvoyConfig());
+
+        return Pair.of(newVersion,
+                new ChangeEnvoyConfigRequest(
+                        newVersion.getServiceId(),
+                        newVersion.getVersion(),
+                        envoyConfigs
+                )
+        );
     }
 
-    private void addUsedByService(String serviceId, String usedByService) {
+    private ClientService addUsedByService(String serviceId, String usedByService) {
         ClientService service = serviceDao.getCurrentVersion(serviceId);
         service.getUsedByServices().add(usedByService);
-        serviceDao.saveNewVersion(service);
+        return serviceDao.saveNewVersion(service);
     }
 
     public ClientService getServiceByServiceIdAndVersion(String serviceId, long version) {
@@ -83,8 +121,20 @@ public class ClientServiceProcessor {
         return serviceDao.saveNewVersion(currentVersion);
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public ClientService changeUsedService(String serviceId, Set<String> usedServiceIds) {
+        Pair<ClientService, ChangeEnvoyConfigRequest> result = doChangeUsedService(serviceId, usedServiceIds);
+        try {
+            eventNotifier.sendNewServiceVersion(result.getRight());
+        } catch (Exception e) {
+            log.error("Failed to notify", e);
+        }
+        return result.getLeft();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Pair<ClientService, ChangeEnvoyConfigRequest> doChangeUsedService(String serviceId,
+                                                                             Set<String> usedServiceIdsImmutable) {
+        Set<String> usedServiceIds = new HashSet<>(usedServiceIdsImmutable);
         boolean selfUsing = usedServiceIds.contains(serviceId);
         usedServiceIds.remove(serviceId);
         ClientService currentVersion = serviceDao.getCurrentVersion(serviceId);
@@ -98,10 +148,10 @@ public class ClientServiceProcessor {
 
         previousUsedServices.putAll(
                 serviceDao.getByIds(
-                        usedServiceIds.stream()
-                                .filter(service -> !previousUsedServices.containsKey(service))
-                                .toList()
-                ).stream().peek(service -> service.getUsedByServices().add(serviceId))
+                                usedServiceIds.stream()
+                                        .filter(service -> !previousUsedServices.containsKey(service))
+                                        .toList()
+                        ).stream().peek(service -> service.getUsedByServices().add(serviceId))
                         .collect(Collectors.toMap(ClientService::getServiceId, Function.identity()))
         );
 
@@ -110,14 +160,27 @@ public class ClientServiceProcessor {
         if (selfUsing) {
             usedServiceIds.add(serviceId);
             currentVersion.getUsedByServices().add(serviceId);
-        } else  {
+        } else {
             currentVersion.getUsedByServices().remove(serviceId);
         }
 
         currentVersion.setUsedServices(usedServiceIds);
         reallocateLocalProxyPorts(currentVersion);
 
-        return serviceDao.saveNewVersion(currentVersion);
+        ClientService newVersion = serviceDao.saveNewVersion(currentVersion);
+
+        List<ClientService> usedServices = usedServiceIds.stream().map(previousUsedServices::get).toList();
+
+        ChangeEnvoyConfigRequest request =
+                new ChangeEnvoyConfigRequest(
+                        serviceId,
+                        newVersion.getVersion(),
+                        newVersion.getInstances().stream()
+                                .map(instance -> (EnvoyConfig) envoyService.getProxyEnvoyConfig(usedServices, instance))
+                                .toList()
+                );
+
+        return Pair.of(newVersion, request);
     }
 
     private void reallocateLocalProxyPorts(ClientService service) {
@@ -149,5 +212,62 @@ public class ClientServiceProcessor {
 
         changeUsedService(serviceId, Set.of());
         serviceDao.deleteService(serviceId);
+    }
+
+    public ClientService moveBalancer(String serviceId, String nodeId) {
+        Pair<ClientService, List<ChangeEnvoyConfigRequest>> result = doMoveBalancer(serviceId, nodeId);
+
+        try {
+            result.getValue().forEach(eventNotifier::sendNewServiceVersion);
+        } catch (Exception e) {
+            log.error("Failed to notify", e);
+        }
+
+        return result.getKey();
+    }
+
+    public Pair<ClientService, List<ChangeEnvoyConfigRequest>> doMoveBalancer(String serviceId, String nodeId) {
+        ClientService service = serviceDao.getCurrentVersion(serviceId);
+        List<ClientService> usedByServices = serviceDao.getByIds(service.getUsedByServices());
+
+        NodeLayout balancerOldNodeLayout =
+                nodeLayoutDao.getNodeLayoutById(service.getServiceIngressProxy().getNodeId());
+
+        balancerOldNodeLayout.deallocateIngressEndpoint(service.getServiceIngressProxy().getIngressEndpoint());
+        balancerOldNodeLayout.deallocateIngressEndpoint(service.getServiceIngressProxy().getMonitoringEndpoint());
+
+        NodeLayout balancerNewNodeLayout = nodeLayoutDao.getNodeLayoutById(nodeId);
+
+        Endpoint ingressEndpoint = balancerNewNodeLayout.allocateIngressEndpoint();
+        Endpoint monitoringEndpoint = balancerNewNodeLayout.allocateIngressEndpoint();
+
+        nodeLayoutDao.saveNodeLayouts(List.of(balancerOldNodeLayout, balancerNewNodeLayout));
+        service.setServiceIngressProxy(new ServiceIngressProxy(nodeId, ingressEndpoint, monitoringEndpoint));
+
+        ClientService newVersion = serviceDao.saveNewVersion(service);
+
+        List<ChangeEnvoyConfigRequest> requests = new ArrayList<>();
+
+        requests.add(
+                new ChangeEnvoyConfigRequest(
+                        serviceId,
+                        newVersion.getVersion(),
+                        List.of(newVersion.getBalancerEnvoyConfig())
+                )
+        );
+
+        requests.addAll(usedByServices.stream().map(usedByService -> {
+                    ClientService serviceNewVersion = serviceDao.saveNewVersion(usedByService);
+                    List<ClientService> usedServices = serviceDao.getByIds(serviceNewVersion.getUsedServices());
+                    return new ChangeEnvoyConfigRequest(
+                            serviceNewVersion.getServiceId(),
+                            serviceNewVersion.getVersion(),
+                            envoyService.getInstancesEnvoyConfigs(usedServices,
+                                    serviceNewVersion.getInstances())
+                    );
+                }).toList()
+        );
+
+        return Pair.of(newVersion, requests);
     }
 }
