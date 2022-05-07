@@ -13,7 +13,7 @@ public class DeployVersionProcessor {
 
     @Transactional(rollbackFor = Exception.class)
     public void updateDeployedVersion(String serviceId, long version) {
-        long currentVersion = serviceDao.getCurrentDeployedVersion(serviceId);
+        long currentVersion = serviceDao.getCurrentVersion(serviceId).getMaxDeployedVersion();
 
         if (currentVersion < version) {
             serviceDao.setCurrentDeployedVersion(serviceId, version);

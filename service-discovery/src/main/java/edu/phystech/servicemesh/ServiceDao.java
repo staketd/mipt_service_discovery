@@ -3,7 +3,6 @@ package edu.phystech.servicemesh;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.ClientServiceVersioned;
@@ -15,10 +14,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@ManagedResource
 public class ServiceDao {
     private final ClientServiceRepository simpleRepository;
     private final ClientServiceWithVersionRepository versionRepository;
@@ -64,17 +65,10 @@ public class ServiceDao {
         return simpleRepository.findAll();
     }
 
-    public long getCurrentDeployedVersion(String serviceId) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("_id").is(serviceId));
-        query.fields().include("deployedVersion");
-        return Objects.requireNonNullElse(mongoTemplate.findOne(query, Long.class, "services"), 0L);
-    }
-
     public void setCurrentDeployedVersion(String serviceId, long version) {
         Query query = new Query();
         query.addCriteria(Criteria.where("_id").is(serviceId));
-        mongoTemplate.updateFirst(query, BasicUpdate.update("deployedVersion", version), "services");
+        mongoTemplate.updateFirst(query, BasicUpdate.update("maxDeployedVersion", version), "services");
     }
 
     public void deleteService(String serviceId) {
