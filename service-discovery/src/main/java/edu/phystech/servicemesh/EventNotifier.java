@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.phystech.servicemesh.model.envoy.ChangeEnvoyConfigRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,6 +37,7 @@ public class EventNotifier {
                     .uri(new URI(CONTROLLER_HOST))
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(envoyRequest)))
                     .timeout(Duration.ofMillis(requestTimeoutMs))
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                     .build();
             log.info(objectMapper.writeValueAsString(envoyRequest));
             httpClient.send(request, HttpResponse.BodyHandlers.ofString());
