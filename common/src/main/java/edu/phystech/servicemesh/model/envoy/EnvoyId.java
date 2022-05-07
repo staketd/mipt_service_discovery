@@ -15,10 +15,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnvoyId implements Serializable {
-    public static final String INSTANCE_PREFIX = "sidecar_";
-    public static final String BALANCER_PREFIX = "balancer_";
+    public static final String INSTANCE_PREFIX = "sidecar-";
+    public static final String BALANCER_PREFIX = "balancer-";
     private String clusterId; // serviceId
-    private String nodeId; // (sidecar_nodeId_serviceInstanceId|balancer_nodeId)
+    private String nodeId; // (sidecar-nodeId-serviceInstanceId|balancer-nodeId)
     @JsonIgnore
     private EnvoyType envoyType;
 
@@ -27,7 +27,7 @@ public class EnvoyId implements Serializable {
     }
 
     public static EnvoyId getInstanceId(String serviceId, String nodeId, String serviceInstanceId) {
-        return new EnvoyId(serviceId, INSTANCE_PREFIX + nodeId + serviceId, EnvoyType.INSTANCE);
+        return new EnvoyId(serviceId, INSTANCE_PREFIX + nodeId + "-" + serviceInstanceId, EnvoyType.INSTANCE);
     }
 
     public EnvoyId(String clusterId, String nodeId) {
@@ -43,7 +43,7 @@ public class EnvoyId implements Serializable {
         if (envoyType == EnvoyType.BALANCER) {
             return null;
         }
-        String[] values = nodeId.split("_");
+        String[] values = nodeId.split("-");
         return new ServiceInstanceId(values[2], values[1]);
     }
 }
