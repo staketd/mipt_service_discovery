@@ -8,7 +8,6 @@ import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.Endpoint;
 import edu.phystech.servicemesh.model.ServiceInstance;
 import edu.phystech.servicemesh.model.ServiceInstanceId;
-import edu.phystech.servicemesh.model.envoy.BalancerEnvoyConfig;
 import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.envoy.EnvoyId;
 import edu.phystech.servicemesh.model.envoy.ProxyEnvoyConfig;
@@ -33,7 +32,7 @@ public class EnvoyService {
         };
     }
 
-    private BalancerEnvoyConfig getBalancerEnvoyConfig(ClientService service) {
+    private EnvoyConfig getBalancerEnvoyConfig(ClientService service) {
         return service.getBalancerEnvoyConfig();
     }
 

@@ -4,16 +4,19 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.phystech.servicemesh.model.envoy.BalancerEnvoyConfig;
+import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.envoy.EnvoyId;
+import edu.phystech.servicemesh.model.envoy.ProxyEnvoyConfig;
 import edu.phystech.servicemesh.model.request.CreateServiceRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.util.Pair;
 
 @Document(collection = "services")
 @Getter
@@ -56,11 +59,15 @@ public class ClientService {
     }
 
     @JsonIgnore
-    public BalancerEnvoyConfig getBalancerEnvoyConfig() {
-        return new BalancerEnvoyConfig(
+    public EnvoyConfig getBalancerEnvoyConfig() {
+        return new ProxyEnvoyConfig(
                 getBalancerEnvoyId(),
                 serviceIngressProxy.getMonitoringEndpoint(),
-                getInstancesEndpoints(),
+                instances.stream().map(instance -> Pair.of(
+                        serviceIngressProxy.getIngressEndpoint(),
+                        instance.getProxy().getIngressEndpoint()
+                    )
+                ).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)),
                 version
         );
     }

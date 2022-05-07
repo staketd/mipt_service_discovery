@@ -39,6 +39,7 @@ public class EnvoyId implements Serializable {
         }
     }
 
+    @JsonIgnore
     public ServiceInstanceId getServiceInstanceId() {
         if (envoyType == EnvoyType.BALANCER) {
             return null;
