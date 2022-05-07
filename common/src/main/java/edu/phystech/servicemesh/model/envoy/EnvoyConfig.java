@@ -3,6 +3,7 @@ package edu.phystech.servicemesh.model.envoy;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import edu.phystech.servicemesh.model.Endpoint;
 import edu.phystech.servicemesh.model.EnvoyType;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,14 +16,10 @@ import lombok.Setter;
         include = JsonTypeInfo.As.EXISTING_PROPERTY,
         property = "type"
 )
+@AllArgsConstructor
 public class EnvoyConfig {
     private EnvoyId envoyId;
     private EnvoyType type;
     private Endpoint monitoringEndpoint;
-
-    public EnvoyConfig(EnvoyId envoyId, EnvoyType type, Endpoint monitoringEndpoint) {
-        this.envoyId = envoyId;
-        this.type = type;
-        this.monitoringEndpoint = monitoringEndpoint;
-    }
+    private long version;
 }

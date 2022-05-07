@@ -60,7 +60,8 @@ public class ClientService {
         return new BalancerEnvoyConfig(
                 getBalancerEnvoyId(),
                 serviceIngressProxy.getMonitoringEndpoint(),
-                getInstancesEndpoints()
+                getInstancesEndpoints(),
+                version
         );
     }
 }

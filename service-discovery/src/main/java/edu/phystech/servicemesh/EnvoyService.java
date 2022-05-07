@@ -46,19 +46,19 @@ public class EnvoyService {
                 .filter(serviceInstance -> serviceInstance.getServiceInstanceId().equals(instanceId))
                 .findFirst().orElseThrow(() -> new ObjectNotFoundException(envoyId, "envoy"));
 
-        return getProxyEnvoyConfig(service.getServiceId(), usedServices, instance);
+        return getProxyEnvoyConfig(service, usedServices, instance);
     }
 
     public List<EnvoyConfig> getInstancesEnvoyConfigs(
-            String serviceId,
+            ClientService service,
             List<ClientService> usedServices,
             List<ServiceInstance> instances
     ) {
-        return instances.stream().map(instance -> (EnvoyConfig) getProxyEnvoyConfig(serviceId, usedServices, instance)).toList();
+        return instances.stream().map(instance -> (EnvoyConfig) getProxyEnvoyConfig(service, usedServices, instance)).toList();
     }
 
     public ProxyEnvoyConfig getProxyEnvoyConfig(
-            String serviceId,
+            ClientService service,
             List<ClientService> usedServices,
             ServiceInstance instance) {
         Map<Endpoint, Endpoint> endpointMapping = new HashMap<>();
@@ -76,9 +76,10 @@ public class EnvoyService {
         );
 
         return new ProxyEnvoyConfig(
-                EnvoyId.getInstanceId(serviceId, instance.getServiceInstanceId().getNodeId(), instance.getServiceInstanceId().getId()),
+                EnvoyId.getInstanceId(service.getServiceId(), instance.getServiceInstanceId().getNodeId(), instance.getServiceInstanceId().getId()),
                 instance.getProxy().getMonitoringEndpoint(),
-                endpointMapping
+                endpointMapping,
+                service.getVersion()
         );
     }
 }

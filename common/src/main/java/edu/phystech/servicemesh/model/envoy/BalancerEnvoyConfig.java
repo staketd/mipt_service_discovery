@@ -13,9 +13,10 @@ public class BalancerEnvoyConfig extends EnvoyConfig {
     public BalancerEnvoyConfig(
             EnvoyId envoyId,
             Endpoint monitoringEndpoint,
-            List<Endpoint> instances
+            List<Endpoint> instances,
+            long version
     ) {
-        super(envoyId, EnvoyType.BALANCER, monitoringEndpoint);
+        super(envoyId, EnvoyType.BALANCER, monitoringEndpoint, version);
         this.instances = instances;
     }
 }

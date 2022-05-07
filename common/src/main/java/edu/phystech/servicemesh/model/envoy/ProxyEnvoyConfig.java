@@ -18,9 +18,10 @@ public class ProxyEnvoyConfig extends EnvoyConfig {
     public ProxyEnvoyConfig(
             EnvoyId envoyId,
             Endpoint monitoringEndpoint,
-            Map<Endpoint, Endpoint> endpointMappings
+            Map<Endpoint, Endpoint> endpointMappings,
+            long version
     ) {
-        super(envoyId, EnvoyType.INSTANCE, monitoringEndpoint);
+        super(envoyId, EnvoyType.INSTANCE, monitoringEndpoint, version);
         this.endpointMappings = endpointMappings.entrySet().stream()
                 .map(entry -> new EnvoyMapping(entry.getKey(), entry.getValue()))
                 .toList();

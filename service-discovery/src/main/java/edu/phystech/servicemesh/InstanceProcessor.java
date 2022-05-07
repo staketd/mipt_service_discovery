@@ -123,7 +123,7 @@ public class InstanceProcessor {
                 .toList();
 
         List<ClientService> usedService = serviceDao.getByIds(newVersion.getUsedServices());
-        List<EnvoyConfig> envoyConfigs = new ArrayList<>(envoyService.getInstancesEnvoyConfigs(serviceId, usedService, addedInstances));
+        List<EnvoyConfig> envoyConfigs = new ArrayList<>(envoyService.getInstancesEnvoyConfigs(newVersion, usedService, addedInstances));
         envoyConfigs.add(newVersion.getBalancerEnvoyConfig());
         return Pair.of(newVersion,
                 new ChangeEnvoyConfigRequest(

@@ -82,16 +82,16 @@ public class ClientServiceProcessor {
         ));
 
         instanceProcessor.addInstances(clientService, request.getServiceInstanceIds());
+        ClientService newVersion = serviceDao.saveNewVersion(clientService);
 
         List<EnvoyConfig> envoyConfigs = new LinkedList<>(clientService.getInstances().stream()
                 .map(instance -> (EnvoyConfig) envoyService.getProxyEnvoyConfig(
-                        clientService.getServiceId(),
+                        newVersion,
                         usedServices,
                         instance
                 ))
                 .toList()
         );
-        ClientService newVersion = serviceDao.saveNewVersion(clientService);
 
         envoyConfigs.add(newVersion.getBalancerEnvoyConfig());
 
@@ -180,7 +180,7 @@ public class ClientServiceProcessor {
                         serviceId,
                         newVersion.getVersion(),
                         newVersion.getInstances().stream()
-                                .map(instance -> (EnvoyConfig) envoyService.getProxyEnvoyConfig(newVersion.getServiceId(), usedServices, instance))
+                                .map(instance -> (EnvoyConfig) envoyService.getProxyEnvoyConfig(newVersion, usedServices, instance))
                                 .toList()
                 );
 
@@ -266,7 +266,7 @@ public class ClientServiceProcessor {
                     return new ChangeEnvoyConfigRequest(
                             serviceNewVersion.getServiceId(),
                             serviceNewVersion.getVersion(),
-                            envoyService.getInstancesEnvoyConfigs(serviceId, usedServices,
+                            envoyService.getInstancesEnvoyConfigs(newVersion, usedServices,
                                     serviceNewVersion.getInstances())
                     );
                 }).toList()
