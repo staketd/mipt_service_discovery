@@ -10,9 +10,11 @@ import javax.annotation.PostConstruct;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.phystech.servicemesh.model.envoy.ChangeEnvoyConfigRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class EventNotifier {
     private final static String CONTROLLER_HOST = "http://localhost:8079/controller/add-config";
     private HttpClient httpClient;
@@ -35,6 +37,7 @@ public class EventNotifier {
                     .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(envoyRequest)))
                     .timeout(Duration.ofMillis(requestTimeoutMs))
                     .build();
+            log.info(objectMapper.writeValueAsString(envoyRequest));
             httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new RuntimeException(e);
