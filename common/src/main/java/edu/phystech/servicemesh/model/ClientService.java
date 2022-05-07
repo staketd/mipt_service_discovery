@@ -47,7 +47,7 @@ public class ClientService {
 
     @JsonIgnore
     public EnvoyId getBalancerEnvoyId() {
-        return new EnvoyId(serviceIngressProxy.getNodeId(), serviceId);
+        return new EnvoyId(serviceId, serviceIngressProxy.getNodeId(), EnvoyType.BALANCER);
     }
 
     @JsonIgnore
