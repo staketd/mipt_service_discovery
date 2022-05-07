@@ -19,10 +19,14 @@ import org.springframework.stereotype.Service;
 public class EventNotifier {
     private final static String CONTROLLER_HOST = "http://localhost:8079/controller/add-config";
     private HttpClient httpClient;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private int connectTimeoutMs = 100;
     private int requestTimeoutMs = 2000;
+
+    public EventNotifier(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     public void afterPropertiesSet() {
