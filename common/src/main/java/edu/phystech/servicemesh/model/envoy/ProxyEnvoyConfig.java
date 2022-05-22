@@ -8,6 +8,7 @@ import edu.phystech.servicemesh.model.EnvoyType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.util.Pair;
 
 @Getter
 @Setter
@@ -18,12 +19,12 @@ public class ProxyEnvoyConfig extends EnvoyConfig {
     public ProxyEnvoyConfig(
             EnvoyId envoyId,
             Endpoint monitoringEndpoint,
-            Map<Endpoint, Endpoint> endpointMappings,
+            List<Pair<Endpoint, Endpoint>> endpointMappings,
             long version
     ) {
         super(envoyId, EnvoyType.INSTANCE, monitoringEndpoint, version);
-        this.endpointMappings = endpointMappings.entrySet().stream()
-                .map(entry -> new EnvoyMapping(entry.getKey(), entry.getValue()))
+        this.endpointMappings = endpointMappings.stream()
+                .map(entry -> new EnvoyMapping(entry.getFirst(), entry.getSecond()))
                 .toList();
     }
 }

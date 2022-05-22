@@ -1,5 +1,6 @@
 package edu.phystech.servicemesh;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.envoy.EnvoyId;
 import edu.phystech.servicemesh.model.envoy.ProxyEnvoyConfig;
 import org.hibernate.ObjectNotFoundException;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,17 +62,18 @@ public class EnvoyService {
             ClientService service,
             List<ClientService> usedServices,
             ServiceInstance instance) {
-        Map<Endpoint, Endpoint> endpointMapping = new HashMap<>();
+        List<Pair<Endpoint, Endpoint>> endpointMapping = new ArrayList<>();
 
-        endpointMapping.put(instance.getProxy().getIngressEndpoint(), instance.getLocalEndpoint());
+        endpointMapping.add(Pair.of(instance.getProxy().getIngressEndpoint(), instance.getLocalEndpoint()));
 
         usedServices.forEach(
-                usedService -> endpointMapping.put(
-                        new Endpoint(
-                                instance.getProxy().getLocalAddress(),
-                                instance.getEgressEndpointsPorts().get(usedService.getServiceId())
-                        ),
-                        usedService.getServiceIngressProxy().getIngressEndpoint()
+                usedService -> endpointMapping.add(Pair.of(
+                            new Endpoint(
+                                    instance.getProxy().getLocalAddress(),
+                                    instance.getEgressEndpointsPorts().get(usedService.getServiceId())
+                            ),
+                            usedService.getServiceIngressProxy().getIngressEndpoint()
+                        )
                 )
         );
 

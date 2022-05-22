@@ -67,7 +67,7 @@ public class ClientService {
                         serviceIngressProxy.getIngressEndpoint(),
                         instance.getProxy().getIngressEndpoint()
                     )
-                ).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)),
+                ).toList(),
                 version
         );
     }

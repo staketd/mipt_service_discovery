@@ -55,7 +55,7 @@ public class ClientServiceProcessor {
         return result.getLeft();
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional
     public Pair<ClientService, ChangeEnvoyConfigRequest> doCreateService(CreateServiceRequest request) {
         if (serviceDao.exists(request.getServiceId())) {
             throw new ServiceAlreadyExistsException(request.getServiceId());
