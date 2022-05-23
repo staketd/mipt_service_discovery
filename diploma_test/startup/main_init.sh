@@ -19,6 +19,7 @@ sudo apt-get install -y mongodb-org=5.0.8 mongodb-org-database=5.0.8 mongodb-org
 printf "replication:\n  oplogSizeMB: 2000\n  replSetName: rs0\n" | sudo tee -a /etc/mongod.conf
 
 sudo systemctl start mongod
+sleep 5s
 mongo --eval "rs.initiate()"
 
 cd Controller
