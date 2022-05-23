@@ -1,0 +1,34 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.box_url = "Vagrantfile"
+
+  config.vm.define "vm_1" do |vm_1|
+    vm_1.vm.provision "shell", path: "startup/vm_init.sh"
+    vm_1.vm.network "private_network", ip: "192.168.56.2"
+  end
+
+  config.vm.define "vm_2" do |vm_2|
+    vm_2.vm.provision "shell", path: "startup/vm_init.sh"
+    vm_2.vm.network "private_network", ip: "192.168.56.3"
+  end
+
+  config.vm.define "vm_3" do |vm_3|
+    vm_3.vm.provision "shell", path: "startup/vm_init.sh"
+    vm_3.vm.network "private_network", ip: "192.168.56.4"
+  end
+
+  config.vm.define "main" do |main|
+    main.vm.provision "shell", path: "startup/main_init.sh", privileged: false
+    main.vm.network "private_network", ip: "192.168.56.5"
+    main.vm.network "forwarded_port", guest: 8080, host: 8082
+    main.vm.network "forwarded_port", guest: 27017, host: 27018
+  end
+
+end
