@@ -85,7 +85,7 @@ public class InstanceProcessor {
                 List.of(
                         currentVersion.getBalancerEnvoyConfig(),
                         envoyService.getProxyEnvoyConfig(currentVersion, EnvoyId.getInstanceId(serviceId,
-                                instance.getServiceInstanceId().getNodeId(), instance.getServiceInstanceId().getId()))
+                                allocatedInstance.getServiceInstanceId().getNodeId(), allocatedInstance.getServiceInstanceId().getId()))
                 )
         );
 

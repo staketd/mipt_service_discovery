@@ -4,7 +4,7 @@ from re import sub
 
 import requests
 
-sd_url = "http://localhost:8085"
+sd_url = "http://localhost:8080"
 
 with open('config_template.yaml', 'r') as f:
     config_template = f.read()
