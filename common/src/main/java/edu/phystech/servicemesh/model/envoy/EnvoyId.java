@@ -5,15 +5,13 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.phystech.servicemesh.model.EnvoyType;
 import edu.phystech.servicemesh.model.ServiceInstanceId;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class EnvoyId implements Serializable {
     public static final String INSTANCE_PREFIX = "sidecar-";
     public static final String BALANCER_PREFIX = "balancer-";
