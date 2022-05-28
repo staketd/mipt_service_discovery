@@ -4,7 +4,7 @@ from re import sub
 
 import requests
 
-sd_url = "http://localhost:8080"
+sd_url = "http://localhost:8085"
 
 with open('config_template.yaml', 'r') as f:
     config_template = f.read()
@@ -83,7 +83,7 @@ def create_service(service_id, balancer_vm_id, instances_vm_ids, used_services):
 def move_balancer(service_id, vm_id):
     current_state = requests.get(url=sd_url + "/service", params={"service_id": service_id}).json()
 
-    move_balancer_response = requests.put(url=sd_url + "/service/move/balancer", params={"service_id": service_id, "to_nod_id": vm_id}).json()
+    move_balancer_response = requests.put(url=sd_url + "/service/move/balancer", params={"service_id": service_id, "to_node_id": vm_id}).json()
     
     stop_envoy(
         current_state['service_ingress_proxy']['node_id'], 
@@ -94,7 +94,8 @@ def move_balancer(service_id, vm_id):
         service_id,
         f"balancer-{move_balancer_response['service_ingress_proxy']['node_id']}",
         move_balancer_response["service_ingress_proxy"]['monitoring_endpoint']['address'],
-        move_balancer_response["service_ingress_proxy"]['monitoring_endpoint']['port']
+        move_balancer_response["service_ingress_proxy"]['monitoring_endpoint']['port'],
+        move_balancer_response['service_ingress_proxy']['ingress_endpoint']['port']
     )
 
 
@@ -141,14 +142,13 @@ def move_instance(service_id, from_instance_id, from_vm_id, to_instance_id, to_v
         }
     }
     move_instance_response = requests.put(url=sd_url + "/service/instance/move", json=move_request).json()
-    print(move_instance_response)
     new_instance = list(filter(lambda inst: inst['id'] == to_instance_id and inst['node_id'] == to_vm_id, move_instance_response['instances']))[0]
 
     print("stopping envoy")
 
     stop_instance(instance)
     print("creating new envoy")
-    create_instance(new_instance)
+    create_instance(service_id, new_instance)
 
 
 def add_instance(service_id, instance_id, vm_id):
@@ -165,7 +165,7 @@ def delete_instance(service_id, instance_id, vm_id):
 
 
 def change_used_services(service_id, used_service_ids):
-    requests.put(url=sd_url + "/service/usedservices/edit", params={"service_id": service_id, "used_service": used_service_ids})
+    requests.put(url=sd_url + "/service/usedservices/edit", params={"service_id": service_id, "used_services": used_service_ids})
 
 def _create_service(args):
     create_service(args.service_id, args.balancer_node_id, args.service_node_ids, [])
@@ -186,7 +186,7 @@ def _delete_instance(args):
     delete_instance(args.service_id, args.instance_id, args.node_id)
 
 def _change_used_services(args):
-    change_used_services(args.servce_id, args.used_services)
+    change_used_services(args.service_id, args.used_services)
 
 
 if __name__ == '__main__':
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     delete_instance_parser.add_argument("--node-id", dest="node_id", help="Node id of instance to delete", required=True)
     delete_instance_parser.set_defaults(func=_delete_instance)
 
-    change_used_services_parser = sub_parsers.add_parser('change-used-service', help='Change used services')
+    change_used_services_parser = sub_parsers.add_parser('change-used-services', help='Change used services')
     change_used_services_parser.add_argument("--used-service", dest='used_services', action='append', help='Used service ids. Repeatable')
     change_used_services_parser.set_defaults(func=_change_used_services)
 
