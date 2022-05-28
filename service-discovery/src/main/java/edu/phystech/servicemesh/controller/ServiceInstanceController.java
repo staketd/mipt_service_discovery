@@ -1,18 +1,14 @@
 package edu.phystech.servicemesh.controller;
 
-import javax.validation.Valid;
-
 import edu.phystech.servicemesh.InstanceProcessor;
 import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.request.AddInstancesRequest;
 import edu.phystech.servicemesh.model.request.DeleteInstancesRequest;
 import edu.phystech.servicemesh.model.request.MoveInstanceRequest;
 import edu.phystech.servicemesh.response.ResponseWrapper;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 import static edu.phystech.servicemesh.response.ResponseWrapper.buildResponse;
 

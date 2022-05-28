@@ -1,14 +1,13 @@
 package edu.phystech.servicemesh.model.envoy;
 
-import java.util.List;
-import java.util.Map;
-
 import edu.phystech.servicemesh.model.Endpoint;
 import edu.phystech.servicemesh.model.EnvoyType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.util.Pair;
+
+import java.util.List;
 
 @Getter
 @Setter

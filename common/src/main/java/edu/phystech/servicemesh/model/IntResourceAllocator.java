@@ -1,8 +1,8 @@
 package edu.phystech.servicemesh.model;
 
-import java.util.LinkedList;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.LinkedList;
 
 public class IntResourceAllocator {
     private int minAvailable;

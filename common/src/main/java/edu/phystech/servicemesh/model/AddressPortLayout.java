@@ -3,8 +3,6 @@ package edu.phystech.servicemesh.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.LinkedList;
-
 
 @Getter
 @Setter

@@ -1,8 +1,5 @@
 package edu.phystech.servicemesh.config;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -15,6 +12,9 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+
+import java.util.Collection;
+import java.util.Collections;
 
 import static java.lang.String.format;
 

@@ -1,12 +1,12 @@
 package edu.phystech.servicemesh;
 
-import java.util.List;
-
 import edu.phystech.servicemesh.exception.NodeIsNotEmptyException;
 import edu.phystech.servicemesh.model.Node;
 import edu.phystech.servicemesh.model.NodeLayout;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class NodeLayoutService {

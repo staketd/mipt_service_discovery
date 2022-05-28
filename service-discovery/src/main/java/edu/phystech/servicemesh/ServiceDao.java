@@ -1,9 +1,5 @@
 package edu.phystech.servicemesh;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.ClientServiceVersioned;
 import edu.phystech.servicemesh.model.ClientServiceVersionedId;
@@ -17,6 +13,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @ManagedResource

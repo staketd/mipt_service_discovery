@@ -1,10 +1,5 @@
 package edu.phystech.servicemesh;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.Endpoint;
 import edu.phystech.servicemesh.model.ServiceInstance;
@@ -16,6 +11,9 @@ import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class EnvoyService {

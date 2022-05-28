@@ -1,11 +1,11 @@
 package edu.phystech.servicemesh.model.envoy;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.phystech.servicemesh.model.EnvoyType;
 import edu.phystech.servicemesh.model.ServiceInstanceId;
 import lombok.*;
+
+import java.io.Serializable;
 
 @Getter
 @Setter

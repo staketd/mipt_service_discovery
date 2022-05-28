@@ -1,9 +1,5 @@
 package edu.phystech.servicemesh.exception;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import edu.phystech.servicemesh.response.ApiError;
 import edu.phystech.servicemesh.response.ResponseWrapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -15,6 +11,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ControllerAdvice
 public class DefaultExceptionHandler {

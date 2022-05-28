@@ -1,23 +1,16 @@
 package edu.phystech.servicemesh.controller;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
-import javax.validation.Valid;
-
 import edu.phystech.servicemesh.ClientServiceProcessor;
 import edu.phystech.servicemesh.model.ClientService;
 import edu.phystech.servicemesh.model.request.CreateServiceRequest;
 import edu.phystech.servicemesh.response.ResponseStatus;
 import edu.phystech.servicemesh.response.ResponseWrapper;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
 import static edu.phystech.servicemesh.response.ResponseWrapper.buildResponse;
 

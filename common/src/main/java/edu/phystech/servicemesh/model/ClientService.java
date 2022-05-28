@@ -1,11 +1,5 @@
 package edu.phystech.servicemesh.model;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.envoy.EnvoyId;
@@ -17,6 +11,11 @@ import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.util.Pair;
+
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 @Document(collection = "services")
 @Getter

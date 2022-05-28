@@ -1,12 +1,12 @@
 package edu.phystech.servicemesh.model;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.Map;
 
 
 @AllArgsConstructor

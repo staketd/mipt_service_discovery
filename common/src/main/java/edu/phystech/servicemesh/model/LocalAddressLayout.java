@@ -1,11 +1,11 @@
 package edu.phystech.servicemesh.model;
 
+import edu.phystech.servicemesh.exception.WrongParameterException;
+import org.springframework.data.annotation.Transient;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-
-import edu.phystech.servicemesh.exception.WrongParameterException;
-import org.springframework.data.annotation.Transient;
 
 public class LocalAddressLayout extends IntResourceAllocator {
     @Transient
