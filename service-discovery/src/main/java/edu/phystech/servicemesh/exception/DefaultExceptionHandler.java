@@ -1,10 +1,12 @@
 package edu.phystech.servicemesh.exception;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.phystech.servicemesh.response.ApiError;
 import edu.phystech.servicemesh.response.ResponseWrapper;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -42,6 +44,6 @@ public class DefaultExceptionHandler {
     })
     @ResponseBody
     public ResponseWrapper<ApiError> handleException(Exception e) {
-        return ResponseWrapper.buildResponse(new ApiError(HttpStatus.BAD_REQUEST, e.getMessage()));
+        return ResponseWrapper.buildResponse(new ApiError(HttpStatus.BAD_REQUEST, e.getMessage(), ExceptionUtils.getStackTrace(e)));
     }
 }

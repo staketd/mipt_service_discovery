@@ -10,12 +10,14 @@ import org.springframework.http.HttpStatus;
 public class ApiError {
     private final HttpStatus responseCode;
     private final String message;
+    private final String stackTrace;
 
     public ApiError(
             HttpStatus responseCode,
-            String message
-    ) {
+            String message,
+            String stackTrace) {
         this.responseCode = responseCode;
         this.message = message;
+        this.stackTrace = stackTrace;
     }
 }

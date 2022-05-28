@@ -12,16 +12,19 @@ Vagrant.configure("2") do |config|
   config.vm.define "vm_1" do |vm_1|
     vm_1.vm.provision "shell", path: "startup/vm_init.sh"
     vm_1.vm.network "private_network", ip: "192.168.56.2"
+    vm_1.vm.provision "file", source: "./empty_file", destination: "vm_1"
   end
 
   config.vm.define "vm_2" do |vm_2|
     vm_2.vm.provision "shell", path: "startup/vm_init.sh"
     vm_2.vm.network "private_network", ip: "192.168.56.3"
+    vm_2.vm.provision "file", source: "./empty_file", destination: "vm_2"
   end
 
   config.vm.define "vm_3" do |vm_3|
     vm_3.vm.provision "shell", path: "startup/vm_init.sh"
     vm_3.vm.network "private_network", ip: "192.168.56.4"
+    vm_3.vm.provision "file", source: "./empty_file", destination: "vm_3"
   end
 
   config.vm.define "main" do |main|
