@@ -15,4 +15,5 @@ public class Proxy {
     private Endpoint ingressEndpoint;
     private Endpoint monitoringEndpoint;
     private String localAddress;
+    private String nodeId;
 }

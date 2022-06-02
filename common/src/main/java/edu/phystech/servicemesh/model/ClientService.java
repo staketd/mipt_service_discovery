@@ -31,7 +31,7 @@ public class ClientService {
     private long version;
     private long maxDeployedVersion;
 
-    private ServiceIngressProxy serviceIngressProxy;
+    private Proxy serviceIngressProxy;
     private List<ServiceInstance> instances;
 
     private Set<String> usedByServices = new HashSet<>();

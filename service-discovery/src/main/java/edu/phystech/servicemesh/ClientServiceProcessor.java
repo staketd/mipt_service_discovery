@@ -2,10 +2,7 @@ package edu.phystech.servicemesh;
 
 import edu.phystech.servicemesh.exception.CommonApiException;
 import edu.phystech.servicemesh.exception.ServiceAlreadyExistsException;
-import edu.phystech.servicemesh.model.ClientService;
-import edu.phystech.servicemesh.model.Endpoint;
-import edu.phystech.servicemesh.model.NodeLayout;
-import edu.phystech.servicemesh.model.ServiceIngressProxy;
+import edu.phystech.servicemesh.model.*;
 import edu.phystech.servicemesh.model.envoy.ChangeEnvoyConfigRequest;
 import edu.phystech.servicemesh.model.envoy.EnvoyConfig;
 import edu.phystech.servicemesh.model.request.CreateServiceRequest;
@@ -70,10 +67,11 @@ public class ClientServiceProcessor {
 
         nodeLayoutDao.saveNodeLayout(balancerNodeLayout);
 
-        clientService.setServiceIngressProxy(new ServiceIngressProxy(
-                request.getServiceIngressNodeId(),
+        clientService.setServiceIngressProxy(new Proxy(
                 ingressProxyEndpoint,
-                monitoringProxyEndpoint
+                monitoringProxyEndpoint,
+                request.getServiceIngressNodeId(),
+                null
         ));
 
         instanceProcessor.addInstances(clientService, request.getServiceInstanceIds());
@@ -241,7 +239,7 @@ public class ClientServiceProcessor {
         Endpoint monitoringEndpoint = balancerNewNodeLayout.allocateIngressEndpoint();
 
         nodeLayoutDao.saveNodeLayouts(List.of(balancerOldNodeLayout, balancerNewNodeLayout));
-        service.setServiceIngressProxy(new ServiceIngressProxy(nodeId, ingressEndpoint, monitoringEndpoint));
+        service.setServiceIngressProxy(new Proxy(ingressEndpoint, monitoringEndpoint, nodeId, null));
 
         ClientService newVersion = serviceDao.saveNewVersion(service);
 
