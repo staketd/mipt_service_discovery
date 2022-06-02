@@ -164,7 +164,7 @@ public class InstanceProcessor {
         return new ServiceInstance(
                 serviceInstanceId,
                 new Endpoint(serviceLocalAddress, servicePort),
-                new Proxy(serviceIngressEndpoint, monitoringEndpoint, proxyLocalAddress),
+                new Proxy(serviceIngressEndpoint, monitoringEndpoint, layout.getNodeIdentifier(), proxyLocalAddress),
                 egressEndpointsPorts
         );
     }
